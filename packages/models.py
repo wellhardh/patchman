@@ -54,12 +54,14 @@ class Package(models.Model):
     RPM = 'R'
     DEB = 'D'
     ARCH = 'A'
+    GENTOO = 'G'
     UNKNOWN = 'U'
 
     PACKAGE_TYPES = (
         (RPM, 'rpm'),
         (DEB, 'deb'),
         (ARCH, 'arch'),
+        (GENTOO, 'gentoo'),
         (UNKNOWN, 'unknown'),
     )
 

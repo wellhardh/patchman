@@ -196,10 +196,17 @@ get_installed_archlinux_packages() {
     fi
 }
 
+get_installed_gentoo_packages() {
+    if check_command_exists qlist ; then
+        qlist -Ic -F "'%{PN}' '%{SLOT}' '%{PV}' REL'%{PR}' '${host_arch}' 'gentoo' '%{CAT}' '%{REPO}'" | sed -e "s/REL'r/'/g"  >> "${tmpfile_pkg}"
+    fi
+}
+
 get_packages() {
     get_installed_rpm_packages
     get_installed_deb_packages
     get_installed_archlinux_packages
+    get_installed_gentoo_packages
 }
 
 get_hostname() {
@@ -239,6 +246,8 @@ get_host_data() {
         elif [ "${ID}" == "fedora" ] ; then
             os="${PRETTY_NAME}"
         elif [ "${ID}" == "arch" ] ; then
+            os="${NAME}"
+        elif [ "${ID}" == "gentoo" ] ; then
             os="${NAME}"
         elif [[ "${ID}" =~ "suse" ]] ; then
             os="${PRETTY_NAME}"
@@ -389,6 +398,28 @@ get_repos() {
         done
         for r in "${!repos[@]}"; do
             echo "'arch' 'Arch Linux ${r} ${host_arch}' '${r}' ${repos[${r}]}" >> "${tmpfile_rep}"
+        done
+    fi
+
+    # Gentoo
+    if [ "${os}" == "Gentoo" ] ; then
+        if [ ${verbose} == 1 ] ; then
+            echo 'Finding portage repos...'
+        fi
+        declare -A repos
+        repos[gentoo]='-1000'
+        repos_conf=$(awk '/\[/{prefix=$0; next} $1{print prefix $0}' /etc/portage/repos.conf/*.conf | grep '^\[')
+        for stanza in ${repos_conf} ; do
+            repo=$(echo ${stanza} | cut -d ']' -f 1 | sed -e 's/\[//')
+            rhs=$(echo ${stanza} | cut -d ']' -f 2 | grep -v '^#')
+            if [[ ${rhs} =~ "priority" ]] ; then
+                priority=$(echo ${rhs} | sed -e 's/^ *priority *= *//')
+                repos[${repo}]+=${priority}
+                unset priority
+            fi
+        done
+        for r in "${!repos[@]}"; do
+            echo "'gentoo' 'Gentoo Linux ${r} ${host_arch}' '${r}' '${repos[${r}]}'" >> "${tmpfile_rep}"
         done
     fi
 
