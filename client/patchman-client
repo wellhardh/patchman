@@ -149,6 +149,14 @@ check_command_exists() {
     fi
 }
 
+check_for_modularity() {
+    if [ yum module 2>&1 | grep -q "No such command" ] ; then
+        modularity_support=false
+    else
+        modularity_support=false
+    fi
+}
+
 get_installed_rpm_packages() {
     if check_command_exists rpm ; then
         if [ ${verbose} == 1 ] ; then
