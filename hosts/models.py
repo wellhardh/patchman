@@ -26,7 +26,7 @@ except ImportError:
     from rpm import labelCompare
 from tagging.fields import TagField
 
-from packages.models import Package, PackageUpdate
+from packages.models import Package, PackageUpdate, MultipleObjectsReturned
 from domains.models import Domain
 from repos.models import Repository
 from operatingsystems.models import OS
@@ -161,6 +161,14 @@ class Host(models.Model):
             )
         except PackageUpdate.DoesNotExist:
             update = None
+        except MultipleObjectsReturned:
+            updates = updates.filter(
+                oldpackage=package,
+                newpackage=highest_package
+            )
+            for update in updates:
+                print(update)
+                sys.exit(1)
         try:
             if update:
                 if security and not update.security:
